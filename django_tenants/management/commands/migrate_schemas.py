@@ -1,11 +1,18 @@
-from django.db.migrations.autodetector import MigrationAutodetector
-
-from django_tenants.migration_executors import get_executor
-from django_tenants.utils import get_tenant_model, get_public_schema_name, schema_exists, get_tenant_database_alias, \
-    has_multi_type_tenants, get_multi_type_database_field_name, get_tenant_migration_order
-from django_tenants.management.commands import SyncCommon
-from django.utils.module_loading import import_string
 from django.conf import settings
+from django.core.management.commands.makemigrations import Command as MakeMigrationsCommand
+from django.utils.module_loading import import_string
+
+from django_tenants.management.commands import SyncCommon
+from django_tenants.migration_executors import get_executor
+from django_tenants.utils import (
+    get_multi_type_database_field_name,
+    get_public_schema_name,
+    get_tenant_database_alias,
+    get_tenant_migration_order,
+    get_tenant_model,
+    has_multi_type_tenants,
+    schema_exists,
+)
 
 
 GET_EXECUTOR_FUNCTION = getattr(settings, 'GET_EXECUTOR_FUNCTION', None)
@@ -16,7 +23,9 @@ else:
 
 
 class MigrateSchemasCommand(SyncCommon):
-    autodetector = MigrationAutodetector
+    # Reference Django's makemigrations autodetector directly to pass Django 6.0's
+    # identity check (commands.E001) which uses `is not` comparison
+    autodetector = MakeMigrationsCommand.autodetector
     help = "Updates database schema. Manages both apps with migrations and those without."
 
     def add_arguments(self, parser):
